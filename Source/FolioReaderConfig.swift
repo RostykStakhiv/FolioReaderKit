@@ -8,76 +8,79 @@
 
 import UIKit
 
-public enum FolioReaderScrollDirection: Int {
-    case vertical
-    case horizontal
+open class FolioReaderConfig: NSObject {
+    // Reader Colors
+    open var tintColor: UIColor!
+    open lazy var toolBarBackgroundColor: UIColor! = self.tintColor
+    open var toolBarTintColor: UIColor!
+    open var menuBackgroundColor: UIColor!
+    open var menuSeparatorColor: UIColor!
+    open var menuTextColor: UIColor!
+    open var nightModeBackground: UIColor!
+    open var nightModeMenuBackground: UIColor!
+    open var nightModeSeparatorColor: UIColor!
+    open lazy var mediaOverlayColor: UIColor! = self.tintColor
     
-    /**
-     The current scroll direction
-     
-     - returns: Returns `UICollectionViewScrollDirection`
-     */
-    func collectionViewScrollDirection() -> UICollectionViewScrollDirection {
-        switch self {
-        case vertical:
-            return .Vertical
-        case horizontal:
-            return .Horizontal
-        }
+    // Custom actions
+    open var shouldHideNavigationOnTap = true
+    open var allowSharing = true
+    open var enableTTS = true
+    
+    // Reader Strings
+    open var localizedHighlightsTitle: String
+    open var localizedHighlightsDateFormat: String
+    open var localizedHighlightMenu: String
+    open var localizedTranslateMenu: String
+    open var localizedDefineMenu: String
+    open var localizedPlayMenu: String
+    open var localizedPauseMenu: String
+    open var localizedFontMenuNight: String
+    open var localizedPlayerMenuStyle: String
+    open var localizedFontMenuDay: String
+    open var localizedReaderOnePageLeft: String
+    open var localizedReaderManyPagesLeft: String
+    open var localizedReaderManyMinutes: String
+    open var localizedReaderOneMinute: String
+    open var localizedReaderLessThanOneMinute: String
+    open var localizedShareWebLink: String?
+    open var localizedShareChapterSubject: String
+    open var localizedShareHighlightSubject: String
+    open var localizedShareAllExcerptsFrom: String
+    open var localizedShareBy: String
+    
+    // MARK: - Init with defaults
+    
+    public override init() {
+        self.tintColor = UIColor(rgba: "#6ACC50")
+        self.toolBarTintColor = UIColor.white
+        self.menuBackgroundColor = UIColor(rgba: "#F5F5F5")
+        self.menuSeparatorColor = UIColor(rgba: "#D7D7D7")
+        self.menuTextColor = UIColor(rgba: "#767676")
+        self.nightModeBackground = UIColor(rgba: "#131313")
+        self.nightModeMenuBackground = UIColor(rgba: "#1E1E1E")
+        self.nightModeSeparatorColor = UIColor(white: 0.5, alpha: 0.2)
+        
+        self.localizedHighlightsTitle = NSLocalizedString("Highlights", comment: "")
+        self.localizedHighlightsDateFormat = "MMM dd, YYYY | HH:mm"
+        self.localizedHighlightMenu = NSLocalizedString("Highlight", comment: "")
+        self.localizedTranslateMenu = NSLocalizedString("Translate", comment: "")
+        self.localizedPlayMenu = NSLocalizedString("Play", comment: "")
+        self.localizedPauseMenu = NSLocalizedString("Pause", comment: "")
+        self.localizedDefineMenu = NSLocalizedString("Define", comment: "")
+        self.localizedFontMenuNight = NSLocalizedString("Night", comment: "")
+        self.localizedFontMenuDay = NSLocalizedString("Day", comment: "")
+        self.localizedPlayerMenuStyle = NSLocalizedString("Style", comment: "")
+        self.localizedReaderOnePageLeft = NSLocalizedString("1 page left", comment: "")
+        self.localizedReaderManyPagesLeft = NSLocalizedString("pages left", comment: "")
+        self.localizedReaderManyMinutes = NSLocalizedString("minutes", comment: "")
+        self.localizedReaderOneMinute = NSLocalizedString("1 minute", comment: "")
+        self.localizedReaderLessThanOneMinute = NSLocalizedString("Less than a minute", comment: "")
+        self.localizedShareWebLink = nil
+        self.localizedShareChapterSubject = NSLocalizedString("Check out this chapter from", comment: "")
+        self.localizedShareHighlightSubject = NSLocalizedString("Notes from", comment: "")
+        self.localizedShareAllExcerptsFrom = NSLocalizedString("All excerpts from", comment: "")
+        self.localizedShareBy = NSLocalizedString("by", comment: "")
+        
+        super.init()
     }
-}
-
-public class FolioReaderConfig: NSObject {
-    
-    // MARK: Colors
-    
-    public var tintColor = UIColor(rgba: "#6ACC50")
-    public var menuBackgroundColor = UIColor.whiteColor()
-    public var menuSeparatorColor = UIColor(rgba: "#D7D7D7")
-    public var menuTextColor = UIColor(rgba: "#767676")
-    public var nightModeBackground = UIColor(rgba: "#131313")
-    public var nightModeMenuBackground = UIColor(rgba: "#1E1E1E")
-    public var nightModeSeparatorColor = UIColor(white: 0.5, alpha: 0.2)
-    public lazy var mediaOverlayColor: UIColor! = self.tintColor
-    
-    // MARK: Custom actions
-    
-    /// If `canChangeScrollDirection` is `true` it will be overrided by user's option.
-    public var scrollDirection: FolioReaderScrollDirection = .vertical
-    
-    /// Enable or disable hability to user change scroll direction on menu.
-    public var canChangeScrollDirection = true
-    
-    /// Should hide navigation bar on user tap
-    public var shouldHideNavigationOnTap = true
-    
-    /// Allow sharing option, if `false` will hide all sharing icons and options
-    public var allowSharing = true
-    
-    /// Enable TTS (Text To Speech)
-    public var enableTTS = true
-    
-    // MARK: Localized strings
-    
-    public var localizedHighlightsTitle = NSLocalizedString("Highlights", comment: "")
-    public var localizedHighlightsDateFormat = "MMM dd, YYYY | HH:mm"
-    public var localizedHighlightMenu = NSLocalizedString("Highlight", comment: "")
-    public var localizedDefineMenu = NSLocalizedString("Define", comment: "")
-    public var localizedPlayMenu = NSLocalizedString("Play", comment: "")
-    public var localizedPauseMenu = NSLocalizedString("Pause", comment: "")
-    public var localizedFontMenuNight = NSLocalizedString("Night", comment: "")
-    public var localizedPlayerMenuStyle = NSLocalizedString("Style", comment: "")
-    public var localizedFontMenuDay = NSLocalizedString("Day", comment: "")
-    public var localizedLayoutHorizontal = NSLocalizedString("Horizontal", comment: "")
-    public var localizedLayoutVertical = NSLocalizedString("Vertical", comment: "")
-    public var localizedReaderOnePageLeft = NSLocalizedString("1 page left", comment: "")
-    public var localizedReaderManyPagesLeft = NSLocalizedString("pages left", comment: "")
-    public var localizedReaderManyMinutes = NSLocalizedString("minutes", comment: "")
-    public var localizedReaderOneMinute = NSLocalizedString("1 minute", comment: "")
-    public var localizedReaderLessThanOneMinute = NSLocalizedString("Less than a minute", comment: "")
-    public var localizedShareWebLink: String? = nil
-    public var localizedShareChapterSubject = NSLocalizedString("Check out this chapter from", comment: "")
-    public var localizedShareHighlightSubject = NSLocalizedString("Notes from", comment: "")
-    public var localizedShareAllExcerptsFrom = NSLocalizedString("All excerpts from", comment: "")
-    public var localizedShareBy = NSLocalizedString("by", comment: "")
 }

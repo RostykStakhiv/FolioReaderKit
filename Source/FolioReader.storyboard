@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12118" systemVersion="16F73" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12086"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Folio Reader Player Menu-->
+        <scene sceneID="JGw-p9-LjM">
+            <objects>
+                <viewController storyboardIdentifier="FolioReaderPlayerMenu" id="pt7-P6-TjR" customClass="FolioReaderPlayerMenu" customModule="Watchnread" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="7Dw-HC-OfN"/>
+                        <viewControllerLayoutGuide type="bottom" id="gKn-pm-gvQ"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="bsj-cP-nzL">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NUW-WO-ZSv">
+                                <rect key="frame" x="143.5" y="289.5" width="88" height="88"/>
+                                <state key="normal" image="playAudioButton"/>
+                                <connections>
+                                    <action selector="playButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="E3G-f7-3RU"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vIv-f9-Gsg">
+                                <rect key="frame" x="251.5" y="304.5" width="58" height="58"/>
+                                <state key="normal" image="nextChapterButton"/>
+                                <connections>
+                                    <action selector="nextButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="oNU-Nz-dFU"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="927-qQ-XeA">
+                                <rect key="frame" x="65.5" y="304.5" width="58" height="58"/>
+                                <state key="normal" image="previewChapterButton"/>
+                                <connections>
+                                    <action selector="prevButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="0cv-15-nyZ"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="P8W-JR-q6B">
+                                <rect key="frame" x="20" y="40" width="99" height="30"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="99" id="6XJ-aw-GFX"/>
+                                    <constraint firstAttribute="height" constant="30" id="yMb-LK-TDL"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <state key="normal" title="Back to library">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="15"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="backButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="LQz-gH-Pvj"/>
+                                </connections>
+                            </button>
+                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="4fX-XT-lXB">
+                                <rect key="frame" x="18" y="602" width="339" height="31"/>
+                                <connections>
+                                    <action selector="sliderChange:" destination="pt7-P6-TjR" eventType="valueChanged" id="gXy-M9-V9G"/>
+                                    <action selector="sliderTouchDown:" destination="pt7-P6-TjR" eventType="touchDown" id="0VA-1l-HtT"/>
+                                    <action selector="sliderTouchUp:" destination="pt7-P6-TjR" eventType="touchUpInside" id="jtm-lk-L34"/>
+                                    <action selector="sliderTouchUp:" destination="pt7-P6-TjR" eventType="touchUpOutside" id="rIf-hd-K50"/>
+                                </connections>
+                            </slider>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="1" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FDV-TL-DCg">
+                                <rect key="frame" x="347" y="632" width="8" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xL3-O8-9cZ" customClass="InspectableButton" customModule="Watchnread" customModuleProvider="target">
+                                <rect key="frame" x="315" y="40" width="40" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="HXI-Ic-CmA"/>
+                                    <constraint firstAttribute="width" constant="40" id="ryy-m6-lvh"/>
+                                </constraints>
+                                <state key="normal" image="shareButton"/>
+                                <connections>
+                                    <action selector="shareButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="15t-Ir-hzM"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pee-Ll-w1s" customClass="InspectableButton" customModule="Watchnread" customModuleProvider="target">
+                                <rect key="frame" x="267" y="40" width="40" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="Gzv-Dh-aOm"/>
+                                    <constraint firstAttribute="width" constant="40" id="mUU-GC-zxJ"/>
+                                </constraints>
+                                <state key="normal" image="quizButton"/>
+                                <connections>
+                                    <action selector="quizButtonPressed:" destination="pt7-P6-TjR" eventType="touchUpInside" id="vR5-xf-Vpr"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="NUW-WO-ZSv" firstAttribute="centerX" secondItem="bsj-cP-nzL" secondAttribute="centerX" id="3pV-6B-koz"/>
+                            <constraint firstItem="NUW-WO-ZSv" firstAttribute="centerY" secondItem="bsj-cP-nzL" secondAttribute="centerY" id="81N-b9-nCJ"/>
+                            <constraint firstItem="pee-Ll-w1s" firstAttribute="centerY" secondItem="xL3-O8-9cZ" secondAttribute="centerY" id="Bax-XM-bP4"/>
+                            <constraint firstItem="xL3-O8-9cZ" firstAttribute="leading" secondItem="pee-Ll-w1s" secondAttribute="trailing" constant="8" id="BsN-pN-NWO"/>
+                            <constraint firstItem="gKn-pm-gvQ" firstAttribute="top" secondItem="4fX-XT-lXB" secondAttribute="bottom" constant="35" id="CWc-M4-XGe"/>
+                            <constraint firstItem="P8W-JR-q6B" firstAttribute="leading" secondItem="bsj-cP-nzL" secondAttribute="leading" constant="20" id="E4v-qI-CkT"/>
+                            <constraint firstAttribute="trailing" secondItem="4fX-XT-lXB" secondAttribute="trailing" constant="20" id="JlB-es-pxX"/>
+                            <constraint firstItem="xL3-O8-9cZ" firstAttribute="top" secondItem="7Dw-HC-OfN" secondAttribute="bottom" constant="20" id="LjO-OJ-Rtg"/>
+                            <constraint firstItem="NUW-WO-ZSv" firstAttribute="leading" secondItem="927-qQ-XeA" secondAttribute="trailing" constant="20" id="OIc-Xj-MaM"/>
+                            <constraint firstAttribute="trailing" secondItem="xL3-O8-9cZ" secondAttribute="trailing" constant="20" id="Wod-9i-bkn"/>
+                            <constraint firstItem="vIv-f9-Gsg" firstAttribute="leading" secondItem="NUW-WO-ZSv" secondAttribute="trailing" constant="20" id="bRl-Ud-y38"/>
+                            <constraint firstItem="4fX-XT-lXB" firstAttribute="leading" secondItem="bsj-cP-nzL" secondAttribute="leading" constant="20" id="cAk-1c-Guu"/>
+                            <constraint firstItem="P8W-JR-q6B" firstAttribute="top" secondItem="7Dw-HC-OfN" secondAttribute="bottom" constant="20" id="dvN-dU-k8t"/>
+                            <constraint firstAttribute="trailing" secondItem="FDV-TL-DCg" secondAttribute="trailing" constant="20" id="tJO-5u-y7s"/>
+                            <constraint firstItem="FDV-TL-DCg" firstAttribute="top" secondItem="4fX-XT-lXB" secondAttribute="bottom" id="vg5-sT-Kjy"/>
+                            <constraint firstItem="927-qQ-XeA" firstAttribute="centerY" secondItem="NUW-WO-ZSv" secondAttribute="centerY" id="yKe-my-nFX"/>
+                            <constraint firstItem="vIv-f9-Gsg" firstAttribute="centerY" secondItem="NUW-WO-ZSv" secondAttribute="centerY" id="z6Z-mO-lvU"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="backButton" destination="P8W-JR-q6B" id="wrj-4a-6ba"/>
+                        <outlet property="nextButton" destination="vIv-f9-Gsg" id="bSO-BA-fvq"/>
+                        <outlet property="playPauseButton" destination="NUW-WO-ZSv" id="JVC-iE-Kp2"/>
+                        <outlet property="prevButton" destination="927-qQ-XeA" id="Srd-ad-red"/>
+                        <outlet property="quizButton" destination="pee-Ll-w1s" id="xIS-ur-5aq"/>
+                        <outlet property="shareButton" destination="xL3-O8-9cZ" id="GFR-jK-KXc"/>
+                        <outlet property="slider" destination="4fX-XT-lXB" id="q3i-lg-bou"/>
+                        <outlet property="totalPagesNumberLabel" destination="FDV-TL-DCg" id="dJn-1I-0iL"/>
+                        <segue destination="Dm1-4w-JKA" kind="show" identifier="sQuiz" id="2xY-qM-uNc"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tD4-DB-EKn" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="362" y="288"/>
+        </scene>
+        <!--Quiz-->
+        <scene sceneID="ZMR-Zc-e9r">
+            <objects>
+                <viewControllerPlaceholder storyboardName="Quiz" id="Dm1-4w-JKA" sceneMemberID="viewController"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="URz-1Q-3Or" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="859.5" y="38"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="nextChapterButton" width="58" height="58"/>
+        <image name="playAudioButton" width="88" height="88"/>
+        <image name="previewChapterButton" width="58" height="58"/>
+        <image name="quizButton" width="38" height="38"/>
+        <image name="shareButton" width="38" height="38"/>
+    </resources>
+</document>

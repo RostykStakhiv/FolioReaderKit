@@ -7,270 +7,323 @@
 //
 
 import UIKit
+import MBProgressHUD
 
-class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureRecognizerDelegate {
+class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate {
 
+    var dropView: KGDropView!
+    @IBOutlet weak var nextButton: UIButton!
+    @IBOutlet weak var prevButton: UIButton!
+    @IBOutlet weak var backButton: UIButton!
+    @IBOutlet weak var playPauseButton: UIButton!
+    @IBOutlet weak var slider: UISlider!
+    @IBOutlet weak var shareButton: InspectableButton!
+    @IBOutlet weak var totalPagesNumberLabel: UILabel!
+    
+    @IBOutlet weak var quizButton: InspectableButton!
+    let bookServices = KGBookServices()
     var menuView: UIView!
+    var scrollScruber: ScrollScrubber? = nil
     var playPauseBtn: UIButton!
     var styleOptionBtns = [UIButton]()
     var viewDidAppear = false
+    var loadingNotification: MBProgressHUD?
 
+    
+    //MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if FolioReader.sharedInstance.readerCenter.loadingView.isHidden == false {
+            
+            loadingNotification = MBProgressHUD.showAdded(to: self.view, animated: true)
+            loadingNotification?.mode = MBProgressHUDMode.indeterminate
+            loadingNotification?.label.text = "Please wait, the book is loading"
+        }
+       
+        dropView = KGDropView(frame: CGRect(x: slider.bounds.origin.x,y: slider.bounds.origin.y,width: 35,height: 40))
+        view.addSubview(dropView)
+
+        setSliderUI()
+        calculatePositionDropView()
+        
+        if FolioReader.kgTranslationModel?.amountOfQuestions == 0 {
+            quizButton.isHidden = true
+        }
 
         // Do any additional setup after loading the view.
-        self.view.backgroundColor = UIColor.clearColor()
+        self.view.backgroundColor = UIColor.clear
+        
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FolioReaderPlayerMenu.tapGesture))
+        tapGestureRecognizer.numberOfTapsRequired = 1
+        view.addGestureRecognizer(tapGestureRecognizer)
 
-        // Tap gesture
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(FolioReaderPlayerMenu.tapGesture))
-        tapGesture.numberOfTapsRequired = 1
-        tapGesture.delegate = self
-        view.addGestureRecognizer(tapGesture)
-
-        // Menu view
-        menuView = UIView(frame: CGRectMake(0, view.frame.height-165, view.frame.width, view.frame.height))
-        menuView.backgroundColor = isNight(readerConfig.nightModeMenuBackground, UIColor.whiteColor())
-        menuView.autoresizingMask = .FlexibleWidth
-        menuView.layer.shadowColor = UIColor.blackColor().CGColor
-        menuView.layer.shadowOffset = CGSize(width: 0, height: 0)
-        menuView.layer.shadowOpacity = 0.3
-        menuView.layer.shadowRadius = 6
-        menuView.layer.shadowPath = UIBezierPath(rect: menuView.bounds).CGPath
-        menuView.layer.rasterizationScale = UIScreen.mainScreen().scale
-        menuView.layer.shouldRasterize = true
-        view.addSubview(menuView)
-        
-        
-        
-
-        let normalColor = UIColor(white: 0.5, alpha: 0.7)
-        let selectedColor = readerConfig.tintColor
-        let size = 55
-        let padX = 32
-        // @NOTE: could this be improved/simplified with autolayout?
-        let gutterX = (Int(view.frame.width) - (size * 3 ) - (padX * 4) ) / 2
-        
-        //let btnX = (Int(view.frame.width) - (size * 3)) / 4
-        
         // get icon images
-        let play = UIImage(readerImageNamed: "play-icon")
-        let pause = UIImage(readerImageNamed: "pause-icon")
-        let prev = UIImage(readerImageNamed: "prev-icon")
-        let next = UIImage(readerImageNamed: "next-icon")
-        let playSelected = play!.imageTintColor(selectedColor).imageWithRenderingMode(.AlwaysOriginal)
-        let pauseSelected = pause!.imageTintColor(selectedColor).imageWithRenderingMode(.AlwaysOriginal)
+        let play = UIImage(readerImageNamed: "playAudioButton")
+        let pause = UIImage(readerImageNamed: "pauseAudioButton")
         
-        let prevNormal = prev!.imageTintColor(normalColor).imageWithRenderingMode(.AlwaysOriginal)
-        let nextNormal = next!.imageTintColor(normalColor).imageWithRenderingMode(.AlwaysOriginal)
-        let prevSelected = prev!.imageTintColor(selectedColor).imageWithRenderingMode(.AlwaysOriginal)
-        let nextSelected = next!.imageTintColor(selectedColor).imageWithRenderingMode(.AlwaysOriginal)
+        playPauseButton.setImage(play, for: UIControlState())
+        playPauseButton.setImage(pause, for: .selected)
+        playPauseButton.titleLabel!.font = UIFont(name: "Avenir", size: 22)!
         
-        // prev button
-        let prevBtn = UIButton(frame: CGRect(x: gutterX + padX, y: 0, width: size, height: size))
-        prevBtn.setImage(prevNormal, forState: .Normal)
-        prevBtn.setImage(prevSelected, forState: .Selected)
-        prevBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.prevChapter(_:)), forControlEvents: .TouchUpInside)
-        menuView.addSubview(prevBtn)
-        
-        // play / pause button
-        let playPauseBtn = UIButton(frame: CGRect(x: Int(prevBtn.frame.origin.x) + padX + size, y: 0, width: size, height: size))
-        playPauseBtn.setTitleColor(selectedColor, forState: .Normal)
-        playPauseBtn.setTitleColor(selectedColor, forState: .Selected)
-        playPauseBtn.setImage(playSelected, forState: .Normal)
-        playPauseBtn.setImage(pauseSelected, forState: .Selected)
-        playPauseBtn.titleLabel!.font = UIFont(name: "Avenir", size: 22)!
-        playPauseBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.togglePlay(_:)), forControlEvents: .TouchUpInside)
-        menuView.addSubview(playPauseBtn)
         
         if FolioReader.sharedInstance.readerAudioPlayer.isPlaying() {
-            playPauseBtn.selected = true
+            playPauseButton.isSelected = true
         }
         
-        // next button
-        let nextBtn = UIButton(frame: CGRect(x: Int(playPauseBtn.frame.origin.x) + padX + size, y: 0, width: size, height: size))
-        nextBtn.setImage(nextNormal, forState: .Normal)
-        nextBtn.setImage(nextSelected, forState: .Selected)
-        nextBtn.addTarget(self, action: #selector(FolioReaderPlayerMenu.nextChapter(_:)), forControlEvents: .TouchUpInside)
-        menuView.addSubview(nextBtn)
-        
+//        let tapOnce = UITapGestureRecognizer(target: self, action: #selector(FolioReaderPlayerMenu.prevButtonOncePressed))
+//        let tapTwice = UITapGestureRecognizer(target: self, action: #selector(FolioReaderPlayerMenu.prevButtonDoublePressed));
+//        
+//        tapOnce.numberOfTapsRequired = 1;
+//        tapTwice.numberOfTapsRequired = 2;
+//        //stops tapOnce from overriding tapTwice
+//        tapOnce.require(toFail: tapTwice)
+//        
+//        prevButton.addGestureRecognizer(tapOnce)
+//        prevButton.addGestureRecognizer(tapTwice)
 
-        // Separator
-        let line = UIView(frame: CGRectMake(0, playPauseBtn.frame.height+playPauseBtn.frame.origin.y, view.frame.width, 1))
-        line.backgroundColor = readerConfig.nightModeSeparatorColor
-        menuView.addSubview(line)
-
-        // audio playback rate adjust
-        let playbackRate = SMSegmentView(frame: CGRect(x: 15, y: line.frame.height+line.frame.origin.y, width: view.frame.width-30, height: 55),
-            separatorColour: UIColor.clearColor(),
-            separatorWidth: 0,
-            segmentProperties:  [
-                keySegmentOnSelectionColour: UIColor.clearColor(),
-                keySegmentOffSelectionColour: UIColor.clearColor(),
-                keySegmentOnSelectionTextColour: selectedColor,
-                keySegmentOffSelectionTextColour: normalColor,
-                keyContentVerticalMargin: 17
-            ])
-        playbackRate.delegate = self
-        playbackRate.tag = 2
-        playbackRate.addSegmentWithTitle("½x", onSelectionImage: nil, offSelectionImage: nil)
-        playbackRate.addSegmentWithTitle("1x", onSelectionImage: nil, offSelectionImage: nil)
-        playbackRate.addSegmentWithTitle("1½x", onSelectionImage: nil, offSelectionImage: nil)
-        playbackRate.addSegmentWithTitle("2x", onSelectionImage: nil, offSelectionImage: nil)
-        playbackRate.segmentTitleFont = UIFont(name: "Avenir-Light", size: 17)!
-        playbackRate.selectSegmentAtIndex(Int(FolioReader.currentAudioRate))
-        menuView.addSubview(playbackRate)
-        
-        
-        // Separator
-        let line2 = UIView(frame: CGRectMake(0, playbackRate.frame.height+playbackRate.frame.origin.y, view.frame.width, 1))
-        line2.backgroundColor = readerConfig.nightModeSeparatorColor
-        menuView.addSubview(line2)
-        
-        
-        // Media overlay highlight styles
-        let style0 = UIButton(frame: CGRectMake(0, line2.frame.height+line2.frame.origin.y, view.frame.width/3, 55))
-        style0.titleLabel!.textAlignment = .Center
-        style0.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
-        style0.setTitleColor(isNight(readerConfig.nightModeMenuBackground, UIColor.whiteColor()), forState: .Normal)
-        style0.setTitleColor(isNight(readerConfig.nightModeMenuBackground, UIColor.whiteColor()), forState: .Selected)
-        style0.setTitle(readerConfig.localizedPlayerMenuStyle, forState: .Normal)
-        menuView.addSubview(style0);
-        style0.titleLabel?.sizeToFit()
-        let style0Bgd = UIView(frame: style0.titleLabel!.frame)
-        style0Bgd.center = CGPointMake(style0.frame.size.width  / 2, style0.frame.size.height / 2);
-        style0Bgd.frame.size.width += 8
-        style0Bgd.frame.origin.x -= 4
-        style0Bgd.backgroundColor = normalColor;
-        style0Bgd.layer.cornerRadius = 3.0;
-        style0Bgd.userInteractionEnabled = false
-        style0.insertSubview(style0Bgd, belowSubview: style0.titleLabel!)
-        
-        let style1 = UIButton(frame: CGRectMake(view.frame.width/3, line2.frame.height+line2.frame.origin.y, view.frame.width/3, 55))
-        style1.titleLabel!.textAlignment = .Center
-        style1.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
-        style1.setTitleColor(normalColor, forState: .Normal)
-        style1.setAttributedTitle(NSAttributedString(string: "Style", attributes: [
-            NSForegroundColorAttributeName: normalColor,
-            NSUnderlineStyleAttributeName: NSUnderlineStyle.PatternDot.rawValue|NSUnderlineStyle.StyleSingle.rawValue,
-            NSUnderlineColorAttributeName: normalColor
-        ]), forState: .Normal)
-        style1.setAttributedTitle(NSAttributedString(string: readerConfig.localizedPlayerMenuStyle, attributes: [
-            NSForegroundColorAttributeName: isNight(UIColor.whiteColor(), UIColor.blackColor()),
-            NSUnderlineStyleAttributeName: NSUnderlineStyle.PatternDot.rawValue|NSUnderlineStyle.StyleSingle.rawValue,
-            NSUnderlineColorAttributeName: selectedColor
-            ]), forState: .Selected)
-        menuView.addSubview(style1);
-        
-        let style2 = UIButton(frame: CGRectMake(view.frame.width/1.5, line2.frame.height+line2.frame.origin.y, view.frame.width/3, 55))
-        style2.titleLabel!.textAlignment = .Center
-        style2.titleLabel!.font = UIFont(name: "Avenir-Light", size: 17)
-        style2.setTitleColor(normalColor, forState: .Normal)
-        style2.setTitleColor(selectedColor, forState: .Selected)
-        style2.setTitle(readerConfig.localizedPlayerMenuStyle, forState: .Normal)
-        menuView.addSubview(style2);
-        
-        // add line dividers between style buttons
-        let style1line = UIView(frame: CGRectMake(style1.frame.origin.x, style1.frame.origin.y, 1, style1.frame.height))
-        style1line.backgroundColor = readerConfig.nightModeSeparatorColor
-        menuView.addSubview(style1line)
-        let style2line = UIView(frame: CGRectMake(style2.frame.origin.x, style2.frame.origin.y, 1, style2.frame.height))
-        style2line.backgroundColor = readerConfig.nightModeSeparatorColor
-        menuView.addSubview(style2line)
-        
-        // select the current style
-        style0.selected = (FolioReader.currentMediaOverlayStyle == .Default)
-        style1.selected = (FolioReader.currentMediaOverlayStyle == .Underline)
-        style2.selected = (FolioReader.currentMediaOverlayStyle == .TextColor)
-        if style0.selected { style0Bgd.backgroundColor = selectedColor }
-        
-        // hook up button actions
-        style0.tag = MediaOverlayStyle.Default.rawValue
-        style1.tag = MediaOverlayStyle.Underline.rawValue
-        style2.tag = MediaOverlayStyle.TextColor.rawValue
-        style0.addTarget(self, action: #selector(FolioReaderPlayerMenu.changeStyle(_:)), forControlEvents: .TouchUpInside)
-        style1.addTarget(self, action: #selector(FolioReaderPlayerMenu.changeStyle(_:)), forControlEvents: .TouchUpInside)
-        style2.addTarget(self, action: #selector(FolioReaderPlayerMenu.changeStyle(_:)), forControlEvents: .TouchUpInside)
-        
-        // store ref to buttons
-        styleOptionBtns.append(style0)
-        styleOptionBtns.append(style1)
-        styleOptionBtns.append(style2)
+        setTotalPagesNumber()
+        setupUIForAuthorizationStatus()
     }
     
 
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         viewDidAppear = true
     }
 
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         viewDidAppear = false
     }
+    
+    //Set Slider 
+    func setSliderUI() {
+        // less obtrusive knob and fixes jump: http://stackoverflow.com/a/22301039/484780
+        let thumbImg = UIImage(readerImageNamed: "knob")
+        let thumbImgColor = thumbImg!.imageTintColor(readerConfig.tintColor).withRenderingMode(.alwaysOriginal)
+        slider.setThumbImage(thumbImgColor, for: UIControlState())
+        slider.setThumbImage(thumbImgColor, for: .selected)
+        slider.setThumbImage(thumbImgColor, for: .highlighted)
+        slider.minimumTrackTintColor = readerConfig.tintColor
+        slider.maximumTrackTintColor = isNight(readerConfig.nightModeSeparatorColor, readerConfig.menuSeparatorColor)
+        setSliderValue()
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    }
+    
+    //
+    func hideHUD() {
+         loadingNotification?.hide(animated: true)
+    }
+    
+    func setTotalPagesNumber() {
+        totalPagesNumberLabel.text = String(FolioReader.sharedInstance.readerCenter.collectionView.numberOfItems(inSection: 0))
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "sQuiz" {
+            if let quizVC = segue.destination as? KGQuizVC {
+                quizVC.book = FolioReader.kgBookModel
+                quizVC.translation = FolioReader.kgTranslationModel
+                quizVC.delegate = self
+            }
+            
+        }
     }
 
     // MARK: - Status Bar
 
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden : Bool {
         return readerConfig.shouldHideNavigationOnTap == true
     }
 
     // MARK: - SMSegmentView delegate
 
-    func segmentView(segmentView: SMSegmentView, didSelectSegmentAtIndex index: Int) {
+    func segmentView(_ segmentView: SMSegmentView, didSelectSegmentAtIndex index: Int) {
 
         if( viewDidAppear != true ){ return }
 
         let audioPlayer = FolioReader.sharedInstance.readerAudioPlayer
 
         if segmentView.tag == 2 {
-
-            audioPlayer.setRate(index)
-
-            FolioReader.currentAudioRate = index
+            audioPlayer?.setRate(index)
+            FolioReader.sharedInstance.currentAudioRate = index
         }
     }
-
-    func prevChapter(sender: UIButton!) {
-        FolioReader.sharedInstance.readerAudioPlayer.playPrevChapter()
-    }
     
-    func nextChapter(sender: UIButton!) {
-        FolioReader.sharedInstance.readerAudioPlayer.playNextChapter()
-    }
-    
-    func togglePlay(sender: UIButton!) {
-        sender.selected = sender.selected != true
-        FolioReader.sharedInstance.readerAudioPlayer.togglePlay()
-        closeView()
-    }
-    
-    func changeStyle(sender: UIButton!) {
-        FolioReader.currentMediaOverlayStyle = MediaOverlayStyle(rawValue: sender.tag)!
+    func changeStyle(_ sender: UIButton!) {
+        FolioReader.sharedInstance.currentMediaOverlayStyle = MediaOverlayStyle(rawValue: sender.tag)!
         
         // select the proper style button
         for btn in styleOptionBtns {
-            btn.selected = btn == sender
+            btn.isSelected = btn == sender
             
-            if btn.tag == MediaOverlayStyle.Default.rawValue {
-                btn.subviews.first?.backgroundColor = btn.selected ? readerConfig.tintColor : UIColor(white: 0.5, alpha: 0.7)
+            if btn.tag == MediaOverlayStyle.default.rawValue {
+                btn.subviews.first?.backgroundColor = btn.isSelected ? readerConfig.tintColor : UIColor(white: 0.5, alpha: 0.7)
             }
         }
         
         // update the current page style
         if let currentPage = FolioReader.sharedInstance.readerCenter.currentPage {
-            currentPage.webView.js("setMediaOverlayStyle(\"\(FolioReader.currentMediaOverlayStyle.className())\")")
+            _ = currentPage.webView.js("setMediaOverlayStyle(\"\(FolioReader.sharedInstance.currentMediaOverlayStyle.className())\")")
         }
     }
 
     func closeView() {
-        dismiss()
+        dismiss(animated: true, completion: nil)
 
         if readerConfig.shouldHideNavigationOnTap == false {
             FolioReader.sharedInstance.readerCenter.showBars()
         }
+    }
+    
+    // MARK: - Actions
+    
+    @IBAction func backButtonPressed(_ sender: AnyObject) {
+        //FolioReader.sharedInstance.readerContainer.orientation = UIInterfaceOrientationMask.Portrait
+        
+        self.dismiss(animated: true, completion: {
+            FolioReader.sharedInstance.isReaderOpen = false
+            FolioReader.sharedInstance.isReaderReady = false
+            FolioReader.sharedInstance.readerAudioPlayer.stop()
+            DispatchQueue.main.async(execute: {
+                
+                FolioReader.sharedInstance.readerContainer.dismiss(animated: true, completion: nil)
+            })
+            
+            
+        })
+
+    }
+    @IBAction func playButtonPressed(_ sender: UIButton) {
+        sender.isSelected = sender.isSelected != true
+        FolioReader.sharedInstance.readerAudioPlayer.togglePlay()
+        closeView()
+    }
+    @IBAction func nextButtonPressed(_ sender: AnyObject) {
+        FolioReader.sharedInstance.readerAudioPlayer.playNextChapter()
+        setSliderValue()
+    }
+    @IBAction func prevButtonPressed(_ sender: AnyObject) {
+        FolioReader.sharedInstance.readerAudioPlayer.playPrevChapter()
+        setSliderValue()
+
+    }
+    
+//    @IBAction func prevButtonOncePressed(_ sender: AnyObject) {
+//        FolioReader.sharedInstance.readerAudioPlayer.stopAndResetCurrentFragment()
+//        FolioReader.sharedInstance.readerAudioPlayer.playAudioFromPageBegin()
+//    }
+    
+    // MARK: - slider events
+    
+    @IBAction func sliderTouchDown(_ slider:UISlider) {
+        
+    }
+    
+    @IBAction func sliderTouchUp(_ slider:UISlider) {
+//        let contentSize = FolioReader.sharedInstance.readerCenter.collectionView.contentSize
+//        let offset = contentSize.width * CGFloat(slider.value)
+//        let page = Int(offset / pageWidth)
+//        let totalPages = FolioReader.sharedInstance.readerCenter.collectionView.numberOfItemsInSection(0)
+//        if page < totalPages {
+//            
+//            if page > FolioReader.sharedInstance.readerCenter.currentPage.pageNumber {
+//                self.nextButtonPressed(nextButton)
+//
+//            } else if page < FolioReader.sharedInstance.readerCenter.currentPage.pageNumber {
+//                self.prevButtonDoublePressed(prevButton)
+//            }
+//            /*let indexPath = NSIndexPath(forRow: page, inSection: 0)
+//            FolioReader.sharedInstance.readerCenter.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition.Right, animated: false)*/
+//        }
+        //hideAfterDelay()
+    }
+    
+    @IBAction func shareButtonPressed(_ sender: UIButton) {
+        let imagePath = FolioReader.sharedInstance.readerCenter.currentPage.webView.js("getPathToFirstImageInChapter()")
+        let url = URL(string: imagePath!)
+        //url  = url.//stringByDeletingPathExtension];
+        let image = UIImage(contentsOfFile: url!.path)
+
+        let textToShare = FolioReader.sharedInstance.readerCenter.currentPage.webView.js("getBodyText()")
+        let bookTitle = book.title()
+        
+        let objectsToShare = [image!, bookTitle!, textToShare!] as [Any]
+        let activityVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+        let excludeActivities = [UIActivityType.airDrop,
+                                 UIActivityType.print,
+                                 UIActivityType.assignToContact,
+                                 UIActivityType.saveToCameraRoll,
+                                 UIActivityType.addToReadingList,
+                                 UIActivityType.postToFlickr,
+                                 UIActivityType.postToVimeo,
+                                 UIActivityType.message];
+        
+        activityVC.excludedActivityTypes = excludeActivities;
+        activityVC.popoverPresentationController?.sourceView = sender
+        self.present(activityVC, animated: true, completion: nil)
+    }
+    
+    @IBAction func quizButtonPressed(_ sender: AnyObject) {
+        performSegue(withIdentifier: "sQuiz", sender: self)
+    }
+    
+    @IBAction func sliderChange(_ slider: UISlider) {
+        let contentSize = FolioReader.sharedInstance.readerCenter.collectionView.contentSize
+        let offset = contentSize.width * CGFloat(slider.value)
+        let page = Int(offset / pageWidth)
+        let totalPages = FolioReader.sharedInstance.readerCenter.collectionView.numberOfItems(inSection: 0)
+        /*if page < totalPages {
+            let indexPath = NSIndexPath(forRow: page, inSection: 0)
+            FolioReader.sharedInstance.readerCenter.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition.Right, animated: false)
+            
+            dropView.countLabel.text = String(page + 1)
+
+        }*/
+        if page < totalPages {
+            
+            if page > FolioReader.sharedInstance.readerCenter.currentPage.pageNumber {
+                self.nextButtonPressed(nextButton)
+                
+            } else if page < FolioReader.sharedInstance.readerCenter.currentPage.pageNumber {
+                self.prevButtonPressed(prevButton)
+            }
+            dropView.countLabel.text = String(page + 1)
+            /*let indexPath = NSIndexPath(forRow: page, inSection: 0)
+             FolioReader.sharedInstance.readerCenter.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition.Right, animated: false)*/
+        }
+
+        calculatePositionDropView()
+    }
+    
+    func setSliderValue() {
+        let offset = FolioReader.sharedInstance.readerCenter.collectionView.contentOffset
+        let currentPage = Int(offset.x / pageWidth)
+        let totalPages = FolioReader.sharedInstance.readerCenter.collectionView.numberOfItems(inSection: 0)
+        dropView.countLabel.text = String("\(currentPage + 1)")
+
+        slider.value = Float(currentPage) / Float(totalPages - 1)
+        calculatePositionDropView()
+    }
+    
+    func calculatePositionDropView() {
+        let value = slider.value
+        let width = pageWidth - 40;
+        
+        let x: CGFloat
+        if value == 0 {
+            x = 20
+        } else {
+            x = width * CGFloat(value) + 18
+        }
+        dropView.center = CGPoint(x: x, y: pageHeight - 60)
+    }
+    
+    // MARK: Orientation
+    
+    override func viewWillTransition(to size: CGSize,
+                                    with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        calculatePositionDropView()
     }
 
     // MARK: - Gestures
@@ -280,10 +333,25 @@ class FolioReaderPlayerMenu: UIViewController, SMSegmentViewDelegate, UIGestureR
     }
 
 
-    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldReceiveTouch touch: UITouch) -> Bool {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceiveTouch touch: UITouch) -> Bool {
         if gestureRecognizer is UITapGestureRecognizer && touch.view == view {
             return true
         }
         return false
+    }
+    
+    //MARK: Private Methods
+    private func setupUIForAuthorizationStatus() {
+        if KGTokenManager.sharedInstance.userAuthenticated == false {
+            self.quizButton.isEnabled = false
+        }
+    }
+}
+
+extension FolioReaderPlayerMenu: KGQuizVCProtocol {
+    func openBook() {
+    }
+    func dismissReader() {
+        backButtonPressed(self)
     }
 }

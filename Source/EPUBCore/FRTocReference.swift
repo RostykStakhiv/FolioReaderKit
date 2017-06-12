@@ -9,25 +9,24 @@
 import UIKit
 
 class FRTocReference: NSObject {
-    var resource: FRResource?
+    var resource: FRResource!
     var title: String!
     var fragmentID: String?
     var children: [FRTocReference]!
     
-    convenience init(title: String, resource: FRResource?, fragmentID: String = "") {
+    convenience init(title:String, resource: FRResource, fragmentID: String = "") {
         self.init(title: title, resource: resource, fragmentID: fragmentID, children: [FRTocReference]())
     }
     
-    init(title: String, resource: FRResource?, fragmentID: String, children: [FRTocReference]) {
+    init(title:String, resource: FRResource, fragmentID: String, children: [FRTocReference]) {
         self.resource = resource
         self.title = title
         self.fragmentID = fragmentID
         self.children = children
     }
-}
-
-// MARK: Equatable
-
-func ==(lhs: FRTocReference, rhs: FRTocReference) -> Bool {
-    return lhs.title == rhs.title && lhs.fragmentID == rhs.fragmentID
+    
+    override func isEqual(_ object: Any?) -> Bool {
+        let obj = object as! FRTocReference
+        return obj.title == self.title && obj.fragmentID == self.fragmentID
+    }
 }

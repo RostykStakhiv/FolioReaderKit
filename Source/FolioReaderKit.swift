@@ -11,38 +11,38 @@ import UIKit
 
 // MARK: - Internal constants for devices
 
-internal let isPad = UIDevice.currentDevice().userInterfaceIdiom == .Pad
-internal let isPhone = UIDevice.currentDevice().userInterfaceIdiom == .Phone
+internal let isPad = UIDevice.current.userInterfaceIdiom == .pad
+internal let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+internal let isPhone4 = (UIScreen.main.bounds.size.height == 480)
+internal let isPhone5 = (UIScreen.main.bounds.size.height == 568)
+internal let isPhone6P = UIDevice.current.userInterfaceIdiom == .phone && UIScreen.main.bounds.size.height == 736
+internal let isSmallPhone = isPhone4 || isPhone5
+internal let isLargePhone = isPhone6P
 
 // MARK: - Internal constants
 
-internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
-internal let kCurrentFontFamily = "com.folioreader.kCurrentFontFamily"
-internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
-internal let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
-internal let kCurrentHighlightStyle = "com.folioreader.kCurrentHighlightStyle"
-internal var kCurrentMediaOverlayStyle = "com.folioreader.kMediaOverlayStyle"
-internal var kCurrentScrollDirection = "com.folioreader.kCurrentScrollDirection"
-internal let kNightMode = "com.folioreader.kNightMode"
-internal let kCurrentTOCMenu = "com.folioreader.kCurrentTOCMenu"
-internal let kMigratedToRealm = "com.folioreader.kMigratedToRealm"
+internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] 
+internal let kCurrentFontFamily = "kCurrentFontFamily"
+internal let kCurrentFontSize = "kCurrentFontSize"
+internal let kCurrentAudioRate = "kCurrentAudioRate"
+internal let kCurrentHighlightStyle = "kCurrentHighlightStyle"
+internal var kCurrentMediaOverlayStyle = "kMediaOverlayStyle"
+internal let kNightMode = "kNightMode"
 internal let kHighlightRange = 30
 internal var kBookId: String!
 
 /**
- Defines the media overlay and TTS selection
- 
- - Default:   The background is colored
- - Underline: The underlined is colored
- - TextColor: The text is colored
- */
+ `0` Default  
+ `1` Underline  
+ `2` Text Color
+*/
 enum MediaOverlayStyle: Int {
-    case Default
-    case Underline
-    case TextColor
+    case `default`
+    case underline
+    case textColor
     
-    init() {
-        self = .Default
+    init () {
+        self = .default
     }
     
     func className() -> String {
@@ -51,86 +51,67 @@ enum MediaOverlayStyle: Int {
 }
 
 /**
- *  Main Library class with some useful constants and methods
- */
-public class FolioReader : NSObject {
+*  Main Library class with some useful constants and methods
+*/
+open class FolioReader : NSObject {
+    fileprivate override init() {}
+    
     static let sharedInstance = FolioReader()
-    static let defaults = NSUserDefaults.standardUserDefaults()
-    weak var readerCenter: FolioReaderCenter!
-    weak var readerContainer: FolioReaderContainer!
-    weak var readerAudioPlayer: FolioReaderAudioPlayer!
+    static let defaults = UserDefaults.standard
+    static var kgBookModel: KGBook? = nil
+    static var kgTranslationModel: KGTranslation? = nil
+    var readerCenter: FolioReaderCenter!
+    var readerSidePanel: FolioReaderSidePanel!
+    var readerContainer: FolioReaderContainer!
+    var readerAudioPlayer: FolioReaderAudioPlayer!
+    var isReaderOpen = false
+    var isReaderReady = false
     
-    private override init() {
-        let isMigrated = FolioReader.defaults.boolForKey(kMigratedToRealm)
-        if !isMigrated {
-            Highlight.migrateUserDataToRealm()
-        }
-    }
     
-    /// Check if reader is open
-    static var isReaderOpen = false
-    
-    /// Check if reader is open and ready
-    static var isReaderReady = false
-    
-    /// Check if layout needs to change to fit Right To Left
-    static var needsRTLChange: Bool {
-        return book.spine.isRtl && readerConfig.scrollDirection == .horizontal
-    }
-    
-    /// Check if current theme is Night mode
-    static var nightMode: Bool {
-        get { return FolioReader.defaults.boolForKey(kNightMode) }
+    var nightMode: Bool? {
+        get { return FolioReader.defaults.value(forKey: kNightMode) as? Bool }
         set (value) {
-            FolioReader.defaults.setBool(value, forKey: kNightMode)
+            FolioReader.defaults.setValue(value, forKey: kNightMode)
+            FolioReader.defaults.synchronize()
         }
     }
-    
-    /// Check current font name
-    static var currentFontName: Int {
-        get { return FolioReader.defaults.valueForKey(kCurrentFontFamily) as! Int }
+    var currentFontName: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontFamily) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontFamily)
+            FolioReader.defaults.synchronize()
         }
     }
     
-    /// Check current font size
-    static var currentFontSize: Int {
-        get { return FolioReader.defaults.valueForKey(kCurrentFontSize) as! Int }
+    var currentFontSize: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontSize) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontSize)
+            FolioReader.defaults.synchronize()
         }
     }
     
-    /// Check current audio rate, the speed of speech voice
-    static var currentAudioRate: Int {
-        get { return FolioReader.defaults.valueForKey(kCurrentAudioRate) as! Int }
+    var currentAudioRate: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentAudioRate) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentAudioRate)
+            FolioReader.defaults.synchronize()
         }
     }
 
-    /// Check the current highlight style
-    static var currentHighlightStyle: Int {
-        get { return FolioReader.defaults.valueForKey(kCurrentHighlightStyle) as! Int }
+    var currentHighlightStyle: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentHighlightStyle) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentHighlightStyle)
+            FolioReader.defaults.synchronize()
         }
     }
     
-    /// Check the current Media Overlay or TTS style
-    static var currentMediaOverlayStyle: MediaOverlayStyle {
-        get { return MediaOverlayStyle(rawValue: FolioReader.defaults.valueForKey(kCurrentMediaOverlayStyle) as! Int)! }
+    var currentMediaOverlayStyle: MediaOverlayStyle {
+        get { return MediaOverlayStyle(rawValue: FolioReader.defaults.value(forKey: kCurrentMediaOverlayStyle) as! Int)! }
         set (value) {
             FolioReader.defaults.setValue(value.rawValue, forKey: kCurrentMediaOverlayStyle)
-        }
-    }
-    
-    /// Check the current scroll direction
-    static var currentScrollDirection: Int {
-        get { return FolioReader.defaults.valueForKey(kCurrentScrollDirection) as! Int }
-        set (value) {
-            FolioReader.defaults.setValue(value, forKey: kCurrentScrollDirection)
+            FolioReader.defaults.synchronize()
         }
     }
     
@@ -139,150 +120,73 @@ public class FolioReader : NSObject {
     /**
      Read Cover Image and Return an IUImage
      */
-    public class func getCoverImage(epubPath: String) -> UIImage? {
+    
+    open class func getCoverImage(_ epubPath: String) -> UIImage? {
         return FREpubParser().parseCoverImage(epubPath)
     }
 
     // MARK: - Present Folio Reader
     
     /**
-     Present a Folio Reader for a Parent View Controller.
+    Present a Folio Reader for a Parent View Controller.
     */
-    public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+    open class func presentReader(parentViewController: UINavigationController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
         let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
-        parentViewController.presentViewController(reader, animated: animated, completion: nil)
+        FolioReader.sharedInstance.readerAudioPlayer = FolioReaderAudioPlayer()
+        parentViewController.present(reader, animated: animated, completion: nil)
+//showViewController(reader, sender: nil) //    
     }
     
     // MARK: - Application State
     
     /**
-     Called when the application will resign active
+    Called when the application will resign active
     */
-    public class func applicationWillResignActive() {
-        saveReaderState()
+    open class func applicationWillResignActive() {
+        //saveReaderState()
     }
     
     /**
-     Called when the application will terminate
+    Called when the application will terminate
     */
-    public class func applicationWillTerminate() {
-        saveReaderState()
+    open class func applicationWillTerminate() {
+        //saveReaderState()
     }
     
     /**
-     Save Reader state, book, page and scroll are saved
+    Save Reader state, book, page and scroll are saved
     */
     class func saveReaderState() {
-        guard FolioReader.isReaderOpen else { return }
-        
-        if let currentPage = FolioReader.sharedInstance.readerCenter.currentPage {
-            let position = [
-                "pageNumber": currentPageNumber,
-                "pageOffsetX": currentPage.webView.scrollView.contentOffset.x,
-                "pageOffsetY": currentPage.webView.scrollView.contentOffset.y
-            ]
-            
-            FolioReader.defaults.setObject(position, forKey: kBookId)
+        if FolioReader.sharedInstance.isReaderOpen {
+            if let currentPage = FolioReader.sharedInstance.readerCenter.currentPage {
+                let position = [
+                    "pageNumber": currentPageNumber,
+                    "pageOffset": currentPage.webView.scrollView.contentOffset.x
+                ] as [String : Any]
+                
+                FolioReader.defaults.set(position, forKey: kBookId)
+                FolioReader.defaults.synchronize()
+            }
         }
-    }
-    
-    /**
-     Closes and save the reader current instance
-     */
-    class func close() {
-        FolioReader.saveReaderState()
-        FolioReader.isReaderOpen = false
-        FolioReader.isReaderReady = false
-        FolioReader.sharedInstance.readerAudioPlayer.stop(immediate: true)
-        FolioReader.defaults.setInteger(0, forKey: kCurrentTOCMenu)
     }
 }
 
 // MARK: - Global Functions
 
-func isNight<T> (f: T, _ l: T) -> T {
-    return FolioReader.nightMode ? f : l
+func isNight<T> (_ f: T, _ l: T) -> T {
+    return (FolioReader.sharedInstance.nightMode == nil) ? f : l
 }
-
-// MARK: - Scroll Direction Functions
-
-func isVerticalDirection<T> (f: T, _ l: T) -> T {
-    return readerConfig.scrollDirection == .vertical ? f : l
-}
-
-extension UICollectionViewScrollDirection {
-    static func direction() -> UICollectionViewScrollDirection {
-        return isVerticalDirection(.Vertical, .Horizontal)
-    }
-}
-
-extension UICollectionViewScrollPosition {
-    static func direction() -> UICollectionViewScrollPosition {
-        return isVerticalDirection(.Top, .Left)
-    }
-}
-
-extension CGPoint {
-    func forDirection() -> CGFloat {
-        return isVerticalDirection(y, x)
-    }
-}
-
-extension CGSize {
-    func forDirection() -> CGFloat {
-        return isVerticalDirection(height, width)
-    }
-    
-    func forReverseDirection() -> CGFloat {
-        return isVerticalDirection(width, height)
-    }
-}
-
-extension CGRect {
-    func forDirection() -> CGFloat {
-        return isVerticalDirection(height, width)
-    }
-}
-
-extension ScrollDirection {
-    static func negative() -> ScrollDirection {
-        return isVerticalDirection(.Down, .Right)
-    }
-    
-    static func positive() -> ScrollDirection {
-        return isVerticalDirection(.Up, .Left)
-    }
-}
-
-// MARK: Helpers
-
-/**
- Delay function
- From: http://stackoverflow.com/a/24318861/517707
- 
- - parameter delay:   Delay in seconds
- - parameter closure: Closure
- */
-func delay(delay:Double, closure:()->()) {
-    dispatch_after(
-        dispatch_time(
-            DISPATCH_TIME_NOW,
-            Int64(delay * Double(NSEC_PER_SEC))
-        ),
-        dispatch_get_main_queue(), closure)
-}
-
 
 // MARK: - Extensions
 
-internal extension NSBundle {
-    class func frameworkBundle() -> NSBundle {
-        return NSBundle(forClass: FolioReader.self)
+extension Bundle {
+    class func frameworkBundle() -> Bundle {
+        return Bundle(for: FolioReader.self)
     }
 }
 
-internal extension UIColor {
+extension UIColor {
     convenience init(rgba: String) {
         var red:   CGFloat = 0.0
         var green: CGFloat = 0.0
@@ -290,11 +194,11 @@ internal extension UIColor {
         var alpha: CGFloat = 1.0
         
         if rgba.hasPrefix("#") {
-            let index   = rgba.startIndex.advancedBy(1)
-            let hex     = rgba.substringFromIndex(index)
-            let scanner = NSScanner(string: hex)
+            let index   = rgba.characters.index(rgba.startIndex, offsetBy: 1)
+            let hex     = rgba.substring(from: index)
+            let scanner = Scanner(string: hex)
             var hexValue: CUnsignedLongLong = 0
-            if scanner.scanHexLongLong(&hexValue) {
+            if scanner.scanHexInt64(&hexValue) {
                 switch (hex.characters.count) {
                 case 3:
                     red   = CGFloat((hexValue & 0xF00) >> 8)       / 15.0
@@ -337,7 +241,7 @@ internal extension UIColor {
      - parameter rgba: Whether the alpha should be included.
      */
     // from: https://github.com/yeahdongcn/UIColor-Hex-Swift
-    func hexString(includeAlpha: Bool) -> String {
+    public func hexString(_ includeAlpha: Bool) -> String {
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0
@@ -375,7 +279,7 @@ internal extension UIColor {
      :param: lighting percent percentage
      :returns: lighter UIColor
      */
-    func lighterColor(percent : Double) -> UIColor {
+    func lighterColor(_ percent : Double) -> UIColor {
         return colorWithBrightnessFactor(CGFloat(1 + percent));
     }
 
@@ -385,7 +289,7 @@ internal extension UIColor {
      :param: darking percent percentage
      :returns: darker UIColor
      */
-    func darkerColor(percent : Double) -> UIColor {
+    func darkerColor(_ percent : Double) -> UIColor {
         return colorWithBrightnessFactor(CGFloat(1 - percent));
     }
 
@@ -395,7 +299,7 @@ internal extension UIColor {
      :param: factor brightness factor
      :returns: modified color
      */
-    func colorWithBrightnessFactor(factor: CGFloat) -> UIColor {
+    func colorWithBrightnessFactor(_ factor: CGFloat) -> UIColor {
         var hue : CGFloat = 0
         var saturation : CGFloat = 0
         var brightness : CGFloat = 0
@@ -409,23 +313,23 @@ internal extension UIColor {
     }
 }
 
-internal extension String {
+extension String {
     /// Truncates the string to length number of characters and
     /// appends optional trailing string if longer
-    func truncate(length: Int, trailing: String? = nil) -> String {
+    func truncate(_ length: Int, trailing: String? = nil) -> String {
         if self.characters.count > length {
-            return self.substringToIndex(self.startIndex.advancedBy(length)) + (trailing ?? "")
+            return self.substring(to: self.characters.index(self.startIndex, offsetBy: length)) + (trailing ?? "")
         } else {
             return self
         }
     }
     
     func stripHtml() -> String {
-        return self.stringByReplacingOccurrencesOfString("<[^>]+>", withString: "", options: .RegularExpressionSearch)
+        return self.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
     }
     
     func stripLineBreaks() -> String {
-        return self.stringByReplacingOccurrencesOfString("\n", withString: "", options: .RegularExpressionSearch)
+        return self.replacingOccurrences(of: "\n", with: "", options: .regularExpression)
     }
 
     /**
@@ -441,7 +345,7 @@ internal extension String {
     */
     func clockTimeToSeconds() -> Double {
 
-        let val = self.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+        let val = self.trimmingCharacters(in: CharacterSet.whitespaces)
 
         if( val.isEmpty ){ return 0 }
 
@@ -456,22 +360,22 @@ internal extension String {
         // search for normal duration formats such as `00:05:01.2`
         for (format, pattern) in formats {
 
-            if val.rangeOfString(pattern, options: .RegularExpressionSearch) != nil {
+            if val.range(of: pattern, options: .regularExpression) != nil {
 
-                let formatter = NSDateFormatter()
+                let formatter = DateFormatter()
                 formatter.dateFormat = format
-                let time = formatter.dateFromString(val)
+                let time = formatter.date(from: val)
 
                 if( time == nil ){ return 0 }
 
                 formatter.dateFormat = "ss.SSS"
-                let seconds = (formatter.stringFromDate(time!) as NSString).doubleValue
+                let seconds = (formatter.string(from: time!) as NSString).doubleValue
 
                 formatter.dateFormat = "mm"
-                let minutes = (formatter.stringFromDate(time!) as NSString).doubleValue
+                let minutes = (formatter.string(from: time!) as NSString).doubleValue
 
                 formatter.dateFormat = "HH"
-                let hours = (formatter.stringFromDate(time!) as NSString).doubleValue
+                let hours = (formatter.string(from: time!) as NSString).doubleValue
 
                 return seconds + (minutes*60) + (hours*60*60)
             }
@@ -480,17 +384,17 @@ internal extension String {
         // if none of the more common formats match, check for other possible formats
 
         // 2345ms
-        if val.rangeOfString("^\\d+ms$", options: .RegularExpressionSearch) != nil{
+        if val.range(of: "^\\d+ms$", options: .regularExpression) != nil{
             return (val as NSString).doubleValue / 1000.0
         }
 
         // 7.25h
-        if val.rangeOfString("^\\d+(\\.\\d+)?h$", options: .RegularExpressionSearch) != nil {
+        if val.range(of: "^\\d+(\\.\\d+)?h$", options: .regularExpression) != nil {
             return (val as NSString).doubleValue * 60 * 60
         }
 
         // 13min
-        if val.rangeOfString("^\\d+(\\.\\d+)?min$", options: .RegularExpressionSearch) != nil {
+        if val.range(of: "^\\d+(\\.\\d+)?min$", options: .regularExpression) != nil {
             return (val as NSString).doubleValue * 60
         }
 
@@ -502,70 +406,50 @@ internal extension String {
         let val = clockTimeToSeconds()
 
         let min = floor(val / 60)
-        let sec = floor(val % 60)
+        let sec = floor(val.truncatingRemainder(dividingBy: 60))
 
         return String(format: "%02.f:%02.f", min, sec)
     }
 
 }
 
-internal extension UIImage {
+extension UIImage {
     convenience init?(readerImageNamed: String) {
-        self.init(named: readerImageNamed, inBundle: NSBundle.frameworkBundle(), compatibleWithTraitCollection: nil)
+        let traits = UITraitCollection(displayScale: UIScreen.main.scale)
+        self.init(named: readerImageNamed, in: Bundle.frameworkBundle(), compatibleWith: traits)
     }
     
-    /**
-     Forces the image to be colored with Reader Config tintColor
-     
-     - returns: Returns a colored image
-     */
-    func ignoreSystemTint() -> UIImage {
-        return self.imageTintColor(readerConfig.tintColor).imageWithRenderingMode(.AlwaysOriginal)
-    }
-    
-    /**
-     Colorize the image with a color
-     
-     - parameter tintColor: The input color
-     - returns: Returns a colored image
-     */
-    func imageTintColor(tintColor: UIColor) -> UIImage {
+    func imageTintColor(_ tintColor: UIColor) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(self.size, false, self.scale)
         
-        let context = UIGraphicsGetCurrentContext()! as CGContextRef
-        CGContextTranslateCTM(context, 0, self.size.height)
-        CGContextScaleCTM(context, 1.0, -1.0)
-        CGContextSetBlendMode(context, CGBlendMode.Normal)
+        let context = UIGraphicsGetCurrentContext()! as CGContext
+        context.translateBy(x: 0, y: self.size.height)
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.setBlendMode(CGBlendMode.normal)
         
-        let rect = CGRectMake(0, 0, self.size.width, self.size.height) as CGRect
-        CGContextClipToMask(context, rect, self.CGImage)
+        let rect = CGRect(x: 0, y: 0, width: self.size.width, height: self.size.height) as CGRect
+        context.clip(to: rect, mask: self.cgImage!)
         tintColor.setFill()
-        CGContextFillRect(context, rect)
+        context.fill(rect)
         
-        let newImage = UIGraphicsGetImageFromCurrentImageContext() as UIImage
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()! as UIImage
         UIGraphicsEndImageContext()
         
         return newImage
     }
     
-    /**
-     Generate a image with a color
-     
-     - parameter color: The input color
-     - returns: Returns a colored image
-     */
-    class func imageWithColor(color: UIColor?) -> UIImage! {
-        let rect = CGRectMake(0.0, 0.0, 1.0, 1.0)
+    class func imageWithColor(_ color: UIColor?) -> UIImage! {
+        let rect = CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0)
         UIGraphicsBeginImageContextWithOptions(rect.size, false, 0)
         let context = UIGraphicsGetCurrentContext()
         
         if let color = color {
             color.setFill()
         } else {
-            UIColor.whiteColor().setFill()
+            UIColor.white.setFill()
         }
         
-        CGContextFillRect(context, rect)
+        context!.fill(rect)
         let image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         
@@ -573,23 +457,14 @@ internal extension UIImage {
     }
 }
 
-internal extension UIViewController {
+/*extension UIViewController: UIGestureRecognizerDelegate {
     
     func setCloseButton() {
-        let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint()
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: closeImage, style: .Plain, target: self, action: #selector(dismiss as Void -> Void))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(readerImageNamed: "icon-close"), style: UIBarButtonItemStyle.Plain, target: self, action:#selector(UIViewController.dismiss))
     }
     
     func dismiss() {
-        dismiss(nil)
-    }
-    
-    func dismiss(completion: (() -> Void)?) {
-        dispatch_async(dispatch_get_main_queue()) {
-            self.dismissViewControllerAnimated(true, completion: {
-                completion?()
-            })
-        }
+        self.dismissViewControllerAnimated(true, completion: nil)
     }
     
     // MARK: - NavigationBar
@@ -609,22 +484,28 @@ internal extension UIViewController {
         navBar?.tintColor = tintColor
         navBar?.titleTextAttributes = [NSForegroundColorAttributeName: titleColor, NSFontAttributeName: font]
     }
+}*/
+
+extension UINavigationController {
+    /*override public func preferredStatusBarStyle() -> UIStatusBarStyle {
+        return isNight(.LightContent, .Default)
+    }*/
 }
 
-internal extension UINavigationBar {
+extension UINavigationBar {
     
     func hideBottomHairline() {
         let navigationBarImageView = hairlineImageViewInNavigationBar(self)
-        navigationBarImageView!.hidden = true
+        navigationBarImageView!.isHidden = true
     }
     
     func showBottomHairline() {
         let navigationBarImageView = hairlineImageViewInNavigationBar(self)
-        navigationBarImageView!.hidden = false
+        navigationBarImageView!.isHidden = false
     }
     
-    private func hairlineImageViewInNavigationBar(view: UIView) -> UIImageView? {
-        if view.isKindOfClass(UIImageView) && view.bounds.height <= 1.0 {
+    fileprivate func hairlineImageViewInNavigationBar(_ view: UIView) -> UIImageView? {
+        if view.isKind(of: UIImageView.self) && view.bounds.height <= 1.0 {
             return (view as! UIImageView)
         }
         
@@ -638,17 +519,7 @@ internal extension UINavigationBar {
     }
 }
 
-extension UINavigationController {
-    
-    public override func preferredStatusBarStyle() -> UIStatusBarStyle {
-        if let vc = visibleViewController {
-            return vc.preferredStatusBarStyle()
-        }
-        return .Default
-    }
-}
-
-internal extension Array {
+extension Array {
     
     /**
      Return index if is safe, if not return nil

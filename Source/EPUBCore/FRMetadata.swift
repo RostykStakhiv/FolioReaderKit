@@ -27,12 +27,10 @@ struct Author {
 A Book's identifier.
 */
 struct Identifier {
-    var id: String?
-    var scheme: String?
-    var value: String?
+    var scheme: String!
+    var value: String!
     
-    init(id: String?, scheme: String?, value: String?) {
-        self.id = id
+    init(scheme: String, value: String) {
         self.scheme = scheme
         self.value = value
     }
@@ -87,7 +85,7 @@ class FRMetadata: NSObject {
     var creators = [Author]()
     var contributors = [Author]()
     var dates = [Date]()
-    var language = "en-US"
+    var language = "en"
     var titles = [String]()
     var identifiers = [Identifier]()
     var subjects = [String]()
@@ -97,36 +95,25 @@ class FRMetadata: NSObject {
     var rights = [String]()
     var metaAttributes = [Meta]()
     
-    /**
-     Find a book unique identifier by ID
-     
-     - parameter id: The ID
-     - returns: The unique identifier of a book
-     */
-    func findIdentifierById(id: String?) -> String? {
-        guard let id = id else { return nil }
-        
-        for identifier in identifiers {
-            if let identifierId = identifier.id where identifierId == id {
-                return identifier.value
-            }
+    func findMetaByName(_ name: String) -> String? {
+        if name.isEmpty {
+            return nil
         }
-        return nil
-    }
-    
-    func findMetaByName(name: String) -> String? {
-        guard !name.isEmpty else { return nil }
         
         for meta in metaAttributes {
-            if let metaName = meta.name where metaName == name {
-                return meta.content
+            if meta.name != nil {
+                if meta.name == name {
+                    return meta.content
+                }
             }
         }
         return nil
     }
 
-    func findMetaByProperty(property: String, refinedBy: String?) -> String? {
-        guard !property.isEmpty else { return nil }
+    func findMetaByProperty(_ property: String, refinedBy: String?) -> String? {
+        if property.isEmpty {
+            return nil
+        }
 
         for meta in metaAttributes {
             if meta.property != nil {
@@ -141,7 +128,7 @@ class FRMetadata: NSObject {
         return nil
     }
 
-    func findMetaByProperty(property: String) -> String? {
+    func findMetaByProperty(_ property: String) -> String? {
         return findMetaByProperty(property, refinedBy: nil);
     }
 
