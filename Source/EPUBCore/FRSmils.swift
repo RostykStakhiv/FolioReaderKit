@@ -12,39 +12,38 @@ import UIKit
 struct FRSmilFile {
     var resource: FRResource
     var data = [FRSmilElement]()
-    
+
     init(resource: FRResource){
         self.resource = resource;
     }
-    
-    // MARK: - shortcuts 
-    
+
+    // MARK: - shortcuts
+
     func ID() -> String {
         return self.resource.id;
     }
-    
+
     func href() -> String {
         return self.resource.href;
     }
-    
+
     // MARK: - data methods
-    
+
     /**
-    Returns a smil <par> tag which contains info about parallel audio and text to be played
-    */
+     Returns a smil <par> tag which contains info about parallel audio and text to be played
+     */
     func parallelAudioForFragment(_ fragment: String!) -> FRSmilElement! {
         return findParElement(forTextSrc: fragment, inData: data)
     }
 
     fileprivate func findParElement(forTextSrc src:String!, inData _data:[FRSmilElement]) -> FRSmilElement! {
-
         for el in _data {
 
             // if its a <par> (parallel) element and has a <text> node with the matching fragment
             if( el.name == "par" && (src == nil || el.textElement().attributes["src"]?.contains(src) != false ) ){
                 return el
 
-            // if its a <seq> (sequence) element, it should have children (<par>)
+                // if its a <seq> (sequence) element, it should have children (<par>)
             }else if el.name == "seq" && el.children.count > 0 {
                 let parEl = findParElement(forTextSrc: src, inData: el.children)
                 if parEl != nil { return parEl }
@@ -52,21 +51,20 @@ struct FRSmilFile {
         }
         return nil
     }
-    
+
     /**
      Returns a smil <par> element after the given fragment
-    */
+     */
     func nextParallelAudioForFragment(_ fragment: String) -> FRSmilElement! {
         return findNextParElement(forTextSrc: fragment, inData: data)
     }
 
     fileprivate func findNextParElement(forTextSrc src:String!, inData _data:[FRSmilElement]) -> FRSmilElement! {
-        //print("data =", _data)
         var foundPrev = false
         for el in _data {
 
             if foundPrev { return el }
-            
+
             // if its a <par> (parallel) element and has a <text> node with the matching fragment
             if( el.name == "par" && (src == nil || el.textElement().attributes["src"]?.contains(src) != false) ){
                 foundPrev = true
@@ -107,22 +105,22 @@ struct FRSmilFile {
 
 /**
  Holds array of `FRSmilFile`
-*/
+ */
 class FRSmils: NSObject {
-    var basePath: String!
-    var smils = [String: FRSmilFile]()
-    
+    var basePath            : String!
+    var smils               = [String: FRSmilFile]()
+
     /**
      Adds a smil to the smils.
      */
     func add(_ smil: FRSmilFile) {
         self.smils[smil.resource.href] = smil
     }
-    
+
     /**
      Gets the resource with the given href.
      */
-    func getByHref(_ href: String) -> FRSmilFile? {
+    func findByHref(_ href: String) -> FRSmilFile? {
         for smil in smils.values {
             if smil.resource.href == href {
                 return smil
@@ -130,11 +128,11 @@ class FRSmils: NSObject {
         }
         return nil
     }
-    
+
     /**
      Gets the resource with the given id.
      */
-    func getById(_ ID: String) -> FRSmilFile? {
+    func findById(_ ID: String) -> FRSmilFile? {
         for smil in smils.values {
             if smil.resource.id == ID {
                 return smil

@@ -42,6 +42,10 @@ body {
     overflow: hidden !important;
 }
 
+* {
+    page-break-before: initial !important; /* Reset page breaks to default */
+}
+
 /* Custom padding for tablets */
 @media only screen and (min-device-width: 768px){
     body {
@@ -79,6 +83,7 @@ p {
     line-height: 1.40em !important;
     text-indent: 1.25em;
 }
+
 b, strong, th {font-weight: bolder !important;}
 
 /* Forced font overrides */

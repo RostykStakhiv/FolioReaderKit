@@ -11,22 +11,9 @@ import FolioReaderKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
     var window: UIWindow?
 
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         return true
     }
-
-    func applicationWillResignActive(application: UIApplication) {
-        FolioReader.applicationWillResignActive()
-    }
-
-    func applicationWillTerminate(application: UIApplication) {
-        FolioReader.applicationWillTerminate()
-    }
-
-
 }
-

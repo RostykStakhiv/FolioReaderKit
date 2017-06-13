@@ -9,22 +9,30 @@
 
 import UIKit
 
-class FRBook: NSObject {
+open class FRBook: NSObject {
     var resources = FRResources()
     var metadata = FRMetadata()
     var spine = FRSpine()
     var smils = FRSmils()
     var tableOfContents: [FRTocReference]!
+    var flatTableOfContents: [FRTocReference]!
     var opfResource: FRResource!
-    var ncxResource: FRResource!
-    var coverImage: FRResource!
+    var tocResource: FRResource?
+    var coverImage: FRResource?
+    var version: Double?
+    var uniqueIdentifier: String?
+    var name: String?
 
     func hasAudio() -> Bool {
-        return smils.smils.count > 0 ? true : false;
+        return smils.smils.count > 0 ? true : false
     }
 
     func title() -> String? {
         return metadata.titles.first
+    }
+
+    func authorName() -> String? {
+        return metadata.creators.first?.name
     }
 
     // MARK: - Media Overlay Metadata
@@ -33,53 +41,51 @@ class FRBook: NSObject {
     func duration() -> String? {
         return metadata.findMetaByProperty("media:duration");
     }
-    
+
     // @NOTE: should "#" be automatically prefixed with the ID?
     func durationFor(_ ID: String) -> String? {
         return metadata.findMetaByProperty("media:duration", refinedBy: ID)
     }
-    
-    
-    func activeClass() -> String! {
-        let className = metadata.findMetaByProperty("media:active-class");
-        return className ?? "epub-media-overlay-active";
+
+
+    func activeClass() -> String {
+        guard let className = metadata.findMetaByProperty("media:active-class") else {
+            return "epub-media-overlay-active"
+        }
+        return className
     }
-    
-    func playbackActiveClass() -> String! {
-        let className = metadata.findMetaByProperty("media:playback-active-class");
-        return className ?? "epub-media-overlay-playing";
+
+    func playbackActiveClass() -> String {
+        guard let className = metadata.findMetaByProperty("media:playback-active-class") else {
+            return "epub-media-overlay-playing"
+        }
+        return className
     }
-    
-    
+
+
     // MARK: - Media Overlay (SMIL) retrieval
-    
+
     /**
      Get Smil File from a resource (if it has a media-overlay)
-    */
+     */
     func smilFileForResource(_ resource: FRResource!) -> FRSmilFile! {
         if( resource == nil || resource.mediaOverlay == nil ){
             return nil
         }
-        
+
         // lookup the smile resource to get info about the file
-        let smilResource = resources.getById(resource.mediaOverlay)
-        
+        let smilResource = resources.findById(resource.mediaOverlay)
+
         // use the resource to get the file
-        let smls = smils.getByHref( smilResource!.href )
-        return smls
+        return smils.findByHref( smilResource!.href )
     }
-    
-    func smilFileForHref(_ href: String?) -> FRSmilFile? {
-        if href != nil {
-            return smilFileForResource(resources.getByHref(href!))
-        } else {
-            return nil
-        }
-        
+
+    func smilFileForHref(_ href: String) -> FRSmilFile! {
+        return smilFileForResource(resources.findByHref(href))
     }
-    
+
     func smilFileForId(_ ID: String) -> FRSmilFile! {
-        return smilFileForResource(resources.getById(ID))
+        return smilFileForResource(resources.findById(ID))
     }
     
 }

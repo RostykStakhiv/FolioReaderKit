@@ -9,15 +9,16 @@
 import UIKit
 
 class FolioReaderSharingProvider: UIActivityItemProvider {
-
     var subject: String
     var text: String
     var html: String?
+    var image: UIImage?
 
-    init(subject: String, text: String, html: String?) {
+    init(subject: String, text: String, html: String? = nil, image: UIImage? = nil) {
         self.subject = subject
         self.text = text
         self.html = html
+        self.image = image
 
         super.init(placeholderItem: "")
     }
@@ -27,8 +28,12 @@ class FolioReaderSharingProvider: UIActivityItemProvider {
     }
 
     override func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivityType) -> Any? {
-        if let html = html, activityType == UIActivityType.mail {
+        if let html = html , activityType == UIActivityType.mail {
             return html
+        }
+
+        if let image = image , activityType == UIActivityType.postToFacebook {
+            return image
         }
 
         return text

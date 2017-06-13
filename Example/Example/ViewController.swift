@@ -11,29 +11,25 @@ import FolioReaderKit
 
 class ViewController: UIViewController {
 
-    @IBOutlet var bookOne: UIButton!
-    @IBOutlet var bookTwo: UIButton!
-    let epubSampleFiles = [
-        "The Silver Chair", // standard eBook
-        "The Adventures Of Sherlock Holmes - Adventure I", // audio-eBook
-    ]
+    @IBOutlet weak var bookOne: UIButton?
+    @IBOutlet weak var bookTwo: UIButton?
+    let folioReader = FolioReader()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        setCover(bookOne, index: 0)
-        setCover(bookTwo, index: 1)
+
+        self.bookOne?.tag = Epub.bookOne.rawValue
+        self.bookTwo?.tag = Epub.bookTwo.rawValue
+
+        self.setCover(self.bookOne, index: 0)
+        self.setCover(self.bookTwo, index: 1)
     }
 
-    @IBAction func didOpen(sender: AnyObject) {
-        openEpub(sender.tag);
-    }
-    
-    func openEpub(sampleNum: Int) {
-        let config = FolioReaderConfig()
-        config.shouldHideNavigationOnTap = sampleNum == 1 ? true : false
-        config.scrollDirection = sampleNum == 1 ? .horizontal : .vertical
-        
+    private func readerConfiguration(forEpub epub: Epub) -> FolioReaderConfig {
+        let config = FolioReaderConfig(withIdentifier: epub.readerIdentifier)
+        config.shouldHideNavigationOnTap = epub.shouldHideNavigationOnTap
+        config.scrollDirection = epub.scrollDirection
+
         // See more at FolioReaderConfig.swift
 //        config.canChangeScrollDirection = false
 //        config.enableTTS = false
@@ -43,19 +39,61 @@ class ViewController: UIViewController {
 //        config.toolBarBackgroundColor = UIColor.purpleColor()
 //        config.menuTextColor = UIColor.brownColor()
 //        config.menuBackgroundColor = UIColor.lightGrayColor()
-        
-        
-        let epubName = epubSampleFiles[sampleNum-1];
-        let bookPath = NSBundle.mainBundle().pathForResource(epubName, ofType: "epub")
-        FolioReader.presentReader(parentViewController: self, withEpubPath: bookPath!, andConfig: config, shouldRemoveEpub: false)
+//        config.hidePageIndicator = true
+//        config.realmConfiguration = Realm.Configuration(fileURL: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("highlights.realm"))
+
+        // Custom sharing quote background
+        config.quoteCustomBackgrounds = []
+        if let image = UIImage(named: "demo-bg") {
+            let customImageQuote = QuoteImage(withImage: image, alpha: 0.6, backgroundColor: UIColor.black)
+            config.quoteCustomBackgrounds.append(customImageQuote)
+        }
+
+        let textColor = UIColor(red:0.86, green:0.73, blue:0.70, alpha:1.0)
+        let customColor = UIColor(red:0.30, green:0.26, blue:0.20, alpha:1.0)
+        let customQuote = QuoteImage(withColor: customColor, alpha: 1.0, textColor: textColor)
+        config.quoteCustomBackgrounds.append(customQuote)
+
+        return config
     }
 
-    func setCover(button: UIButton, index: Int) {
-        let epubName = epubSampleFiles[index];
-        let bookPath = NSBundle.mainBundle().pathForResource(epubName, ofType: "epub")
-        
-        if let image = FolioReader.getCoverImage(bookPath!) {
-            button.setBackgroundImage(image, forState: .Normal)
+    fileprivate func open(epub: Epub) {
+        guard let bookPath = epub.bookPath else {
+            return
         }
+
+        let readerConfiguration = self.readerConfiguration(forEpub: epub)
+        folioReader.presentReader(parentViewController: self, withEpubPath: bookPath, andConfig: readerConfiguration, shouldRemoveEpub: false)
+    }
+
+    private func setCover(_ button: UIButton?, index: Int) {
+        guard
+            let epub = Epub(rawValue: index),
+            let bookPath = epub.bookPath else {
+                return
+        }
+
+        do {
+            if let image = try FolioReader.getCoverImage(bookPath) {
+                button?.setBackgroundImage(image, for: .normal)
+            }
+        } catch let e as FolioReaderError {
+            print(e.localizedDescription)
+        } catch {
+            print("Unkown error")
+        }
+    }
+}
+
+// MARK: - IBAction
+
+extension ViewController {
+    
+    @IBAction func didOpen(_ sender: AnyObject) {
+        guard let epub = Epub(rawValue: sender.tag) else {
+            return
+        }
+
+        self.open(epub: epub)
     }
 }

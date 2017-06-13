@@ -5,26 +5,26 @@
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "3B612560170EA1D8B903F3973583DC66B5877296" : 0,
-    "9BCD10649C00B1FF6599C448235C882F32E44F3C" : 0
+    "19E701A0BEC39BF308FB664E582F965CD3268EEB" : 9223372036854775807
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "2421D5CE-8B6E-412D-9068-3D56462D7CCE",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "3B612560170EA1D8B903F3973583DC66B5877296" : "FolioReaderKit\/",
-    "9BCD10649C00B1FF6599C448235C882F32E44F3C" : "UIMenuItem-CXAImageSupport\/"
+    "19E701A0BEC39BF308FB664E582F965CD3268EEB" : "watchnread-ios\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "FolioReaderKit",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
-  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "FolioReaderKit\/FolioReaderKit.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "FolioReaderKit.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:FolioReader\/FolioReaderKit.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/KindGeek\/watchnread-ios.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3B612560170EA1D8B903F3973583DC66B5877296"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "19E701A0BEC39BF308FB664E582F965CD3268EEB"
     },
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:alexpopov\/UIMenuItem-CXAImageSupport.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/RostykStakhiv\/FolioReaderKit.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "9BCD10649C00B1FF6599C448235C882F32E44F3C"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3B612560170EA1D8B903F3973583DC66B5877296"
     }
   ]
 }
