@@ -275,7 +275,6 @@ extension FolioReader {
             guard let value = self.defaults.integer(forKey: kCurrentScrollDirection) as? Int else {
                 return FolioReaderScrollDirection.defaultVertical.rawValue
             }
-
             return value
         }
         set (value) {
@@ -354,6 +353,7 @@ extension FolioReader {
 
         self.savedPositionForCurrentBook = position
     }
+}
 
     /// Closes and save the reader current instance.
     open func close() {
